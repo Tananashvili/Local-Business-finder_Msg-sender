@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const successMessage = document.getElementById('success-message');
+            const messageForm = document.querySelector('.message-form');
+    
+            messageForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Submit the form using AJAX
+                fetch('/send_message', {
+                    method: 'POST',
+                    body: new FormData(messageForm),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        successMessage.style.display = 'block';
+                        // Reload the page after a short delay (e.g., 2 seconds)
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    }
+                })
+                .catch(error => console.error(error));
+            });
+        });
+    </script>
+    
+    
+    <title>Conversation</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            width: 50%;
+            height: 95%;
+            overflow-y: auto;
+            background-color: #f2f2f2;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .message-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .message {
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            max-width: 70%;
+        }
+        .attachment-info {
+            font-style: italic;
+            color: #666;
+            margin-top: 5px;
+        }
+        .received-message {
+            background-color: #e1e1e1;
+        }
+        .sent-message {
+            background-color: #DCF8C6;
+            margin-left: auto;
+        }
+        .message-form {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> </h1>
+        <div class="message-container">
+            {% for message in conversation %}
+                <div class="message {% if message['name'] == 'Me' %}sent-message{% else %}received-message{% endif %}">
+                    {% if message['name'] != 'Me' %}
+                        <strong>{{ message['name'] }}:</strong>
+                    {% endif %}
+                    {{ message['text'] }}
+                    {% if message['attachment'] %}
+                        <span class="attachment-info">Attachment ID: {{ message['attachment'] }}</span>
+                        <br>
+                    {% endif %}
+                    <small>{{ message['timestamp'] }}</small>
+                </div>
+            {% endfor %}
+        </div>
+
+        <form method="POST" action="/send_message" class="message-form">
+            <div id="success-message" style="display: none; color: green;">
+                Message sent successfully!
+            </div>
+            <input type="text" name="recipient" value="{{ conversation[0]['number'] }}" hidden>
+            <h1> </h1>
+            <input type="text" name="message" placeholder="Message" style="width: 80%; height: 60px;">
+            <input type="submit" value="Send Message">            
+        </form>
+    </div>
+</body>
+</html>
