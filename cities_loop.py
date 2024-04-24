@@ -1,5 +1,4 @@
 import email
-from email.headerregistry import Address
 from pydoc import html
 import googlemaps
 import time
@@ -8,7 +7,7 @@ from colorama import Fore, Style
 import random
 from emails import get_all_emails, send_email
 
-# pass = "ptdo npeu pvmi oxzv"
+# my_pass = "ptdo npeu pvmi oxzv"
 
 # Set up your Google API key
 API_KEY = ""
@@ -17,7 +16,7 @@ gmaps = googlemaps.Client(key=API_KEY)
 print("BUSINESS SEARCH \n")
 
 # Inputs for location and business type
-location = input("Enter the location: ")
+# location = input("Enter the location: ")
 business_type = input("Enter the business type: ")
 
 # Function to display place details
@@ -28,13 +27,11 @@ def display_place_details(place_id):
     print(f"Name: {result.get('name', 'N/A')}")
     print(f"Address: {result.get('formatted_address', 'N/A')}")
     print(f"Phone Number: {result.get('formatted_phone_number', 'N/A')}")
-    print(f"International Phone Number: {result.get('international_phone_number', 'N/A')}")
     print(f"Website: {result.get('website', 'N/A')}")
     print(f"Rating: {result.get('rating', 'N/A')}")
     print(f"Total Reviews: {result.get('user_ratings_total', 'N/A')}\n")
 
-    return {"name": result.get('name', 'N/A'), "website": result.get('website', 'N/A'), "address": result.get('formatted_address', 'N/A'), "number": result.get('formatted_phone_number', 'N/A'),
-            'int_number': result.get('international_phone_number', 'N/A'), 'rating': result.get('rating', 'N/A'), 'reviews': result.get('user_ratings_total', 'N/A')}
+    return {"name": result.get('name', 'N/A'), "website": result.get('website', 'N/A')}
 
 COMPANIES = []
 # Function to search for the place and display results
@@ -42,7 +39,7 @@ def search_and_display_places(query, location, page_token=None):
     attempts = 0
     result = None
 
-    while attempts < 1:
+    while attempts < 5:
         try:
             result = gmaps.places(
                 query=query,
@@ -71,11 +68,6 @@ def search_and_display_places(query, location, page_token=None):
         if next_page_token:
             search_and_display_places(query, location, next_page_token)
 
-    companies = pd.DataFrame(COMPANIES)
-    companies.drop_duplicates(subset='website', keep='first', inplace=True)
-    companies.reset_index(drop=True, inplace=True)
-    companies.to_excel("database.xlsx", index=False)
-
 def send_emails(emails):
     print("INPUT DATA TO SEND EMAILS")
 
@@ -86,7 +78,7 @@ def send_emails(emails):
     attachment_name = input(f"Name of the Attachment File \n(input 0 if there is no attachment): ")
     from_ = input("from: ")
 
-    with open(f"{html_route}.html", "r", encoding='utf-8') as html_file:
+    with open(f"{html_route}.html", "r") as html_file:
         html_content = html_file.read()
 
     i = 1
@@ -99,26 +91,37 @@ def send_emails(emails):
         time.sleep(random_wait_time)
         i += 1
 
-if location and business_type:
-    # Geocoding an address
-    geocode_result = gmaps.geocode(location)
+df = pd.read_excel("list-cities-poland.xlsx")
+locations = df['Name'].tolist()
 
-    if geocode_result:
-        loc = geocode_result[0]["geometry"]["location"]
-        lat = loc["lat"]
-        lng = loc["lng"]
+for location in locations:
+    if location and business_type:
+        # Geocoding an address
+        geocode_result = gmaps.geocode(location)
 
-        # Search for the place and display results
-        search_and_display_places(business_type, (lat, lng))
+        if geocode_result:
+            loc = geocode_result[0]["geometry"]["location"]
+            lat = loc["lat"]
+            lng = loc["lng"]
 
+            # Search for the place and display results
+            search_and_display_places(business_type, (lat, lng))
+
+        else:
+            print("Location not found. Please check your input.")
     else:
-        print("Location not found. Please check your input.")
-else:
-    print("Please enter both location and business type.")
+        print("Please enter both location and business type.")
 
-get_emails_str = input("Get Emails? (y/n): ")
 
-if get_emails_str == "y":
-    emails = get_all_emails(location, business_type)
-    print(f"{len(emails)} Emails Found. \n")
-    send_emails(emails)
+if __name__ == "__main__":
+    companies = pd.DataFrame(COMPANIES)
+    companies.drop_duplicates(subset='website', keep='first', inplace=True)
+    companies.reset_index(drop=True, inplace=True)
+    companies.to_excel("database.xlsx", index=False)
+
+    get_emails_str = input("Get Emails? (y/n): ")
+
+    if get_emails_str == "y":
+        emails = get_all_emails()
+        print(f"{len(emails)} Emails Found. \n")
+        send_emails(emails)

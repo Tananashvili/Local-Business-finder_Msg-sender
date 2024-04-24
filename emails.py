@@ -12,11 +12,11 @@ def extract_emails(text):
     return emails
 
 def find_email_on_website(website_url):
-    paths_to_try = ["", "contact", "contacts", "contactus", "en/contact", "en/contacts", "en/contactus"]
+    paths_to_try = ["", "contact", "contacts", "contactus", "en/contact", "en/contacts", "en/contactus", "/კონტაქტი", "/დაგვიკავშირდით"]
 
     for path in paths_to_try:
         try_url = website_url + path
-        response = requests.get(try_url, timeout=5)
+        response = requests.get(try_url)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -30,11 +30,11 @@ def find_email_on_website(website_url):
     return "Couldn't find Email on website."
 
 def find_socials_on_website(website_url):
-    paths_to_try = ["", "contact", "contacts", "contactus", "en/contact", "en/contacts", "en/contactus"]
+    paths_to_try = ["", "contact", "contacts", "contactus", "en/contact", "en/contacts", "en/contactus", "/კონტაქტი", "/დაგვიკავშირდით"]
 
     for path in paths_to_try:
         try_url = website_url + path
-        response = requests.get(try_url, timeout=5)
+        response = requests.get(try_url)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -57,7 +57,7 @@ def get_all_emails(loc, bus):
     for index, row in df.iterrows():
         website_url = row['website']
         try:
-            response = requests.get(website_url, timeout=5)
+            response = requests.get(website_url)
 
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
@@ -85,7 +85,7 @@ def get_all_emails(loc, bus):
     for index, row in df.iterrows():
         website_url = row['website']
         try:
-            response = requests.get(website_url, timeout=5)
+            response = requests.get(website_url)
 
             if response.status_code == 200:
                 soup = BeautifulSoup(response.text, 'html.parser')
